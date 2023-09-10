@@ -1,0 +1,39 @@
+---
+version: '3'
+volumes:
+  db:
+services:
+  redis:
+    image: redis:7.2
+  app:
+    build: "."
+    command:
+    - "./bin/dev"
+    volumes:
+    - ".:/app"
+    - db:/app/db/
+    ports:
+    - 3000:3000
+    stdin_open: true
+    tty: true
+    depends_on:
+    - redis
+    environment:
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+  sidekiq:
+    build: "."
+    command:
+    - bundle
+    - exec
+    - sidekiq
+    volumes:
+    - ".:/app"
+    - db:/app/db/
+    stdin_open: true
+    tty: true
+    depends_on:
+    - redis
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      RAILS_ENV: development

@@ -1,0 +1,50 @@
+---
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+      MYSQL_DATABASE: mysql_app_development
+    ports:
+    - 3307:3306
+  redis:
+    image: redis:7.2
+  app:
+    build: "."
+    command:
+    - "./bin/dev"
+    volumes:
+    - ".:/app"
+    ports:
+    - 3000:3000
+    stdin_open: true
+    tty: true
+    depends_on:
+    - db
+    - redis
+    links:
+    - db
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      RAILS_ENV: development
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD:
+      DATABASE_HOST: db
+  sidekiq:
+    build: "."
+    command:
+    - bundle
+    - exec
+    - sidekiq
+    volumes:
+    - ".:/app"
+    depends_on:
+    - db
+    - redis
+    links:
+    - db
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      RAILS_ENV: development
